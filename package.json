@@ -1,0 +1,17 @@
+{
+  "name": "tweeter",
+  "version": "1.0.0",
+  "workspaces": [
+    "tweeter-shared",
+    "tweeter-web"
+  ],
+  "scripts": {
+    "build": "echo === $npm_package_name && npm run -ws --if-present build"
+  },
+  "author": "JWilkerson",
+  "license": "ISC",
+  "dependencies": {
+    "rimraf": "^5.0.5",
+    "vite-plugin-dts": "^3.7.3"
+  }
+}
