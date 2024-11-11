@@ -1,6 +1,5 @@
-import { UserDto } from "../../dto/UserDto";
 
-export interface TweeterRespoonse{
+export interface TweeterResponse{
     readonly success: boolean;
     readonly message: string | null;
 }
