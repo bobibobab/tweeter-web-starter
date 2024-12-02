@@ -4,4 +4,6 @@ export interface UserItem {
     user_alias: string;
     passwords: string;
     imageUrl?: string; // Optional, in case not all users have an image
+    follower_number: number;
+    followee_number: number;
 }

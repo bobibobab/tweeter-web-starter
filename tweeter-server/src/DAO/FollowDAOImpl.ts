@@ -22,14 +22,16 @@ export class FollowDAOImpl implements FollowDAO{
 
     private readonly client = DynamoDBDocumentClient.from(new DynamoDBClient());
     
-    async putFollow(follower_alias: string, followerName: string, followee_alias: string, followeeName: string) {
+    async putFollow(follower_alias: string, followerName: string, followerUrl: string, followee_alias: string, followeeName: string, followeeUrl: string) {
         const params = {
             TableName: this.tableName,
             Item: {
                 [this.follower_handle_attr]: follower_alias,
                 [this.follower_name_attr]: followerName,
+                followerUrl: followerUrl,
                 [this.followee_handle_attr]: followee_alias,
                 [this.followee_name_attr]: followeeName,
+                followeeUrl: followeeUrl,
             },
         };
         await this.client.send(new PutCommand(params));
