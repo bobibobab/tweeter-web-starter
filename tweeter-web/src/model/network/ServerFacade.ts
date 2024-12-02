@@ -301,12 +301,15 @@ export class ServerFacade {
         // Convert the UserDto array returned by ClientCommunicator to a User array
         const user = User.fromDto(response.user);
         const token = AuthToken.fromDto(response.token);
-
+        console.log(user);
+        console.log(response.success);
         // Handle errors    
         if (response.success) {
+            
             if (user == null || token == null) {
-                throw new Error(`No Login`);
+                throw new Error(`No Register`);
             } else {
+                
                 return [user, token];
             }
         } else {

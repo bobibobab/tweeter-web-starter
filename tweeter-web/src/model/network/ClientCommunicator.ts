@@ -33,10 +33,11 @@ export class ClientCommunicator {
 
         try {
             const resp: Response = await fetch(url, params);
-
+           
             if (resp.ok) {
                 // Be careful with the return type here. resp.json() returns Promise<any> which means there is no type checking on response.
                 const response: RES = await resp.json();
+                
                 return response;
             } else {
                 const error = await resp.json();
