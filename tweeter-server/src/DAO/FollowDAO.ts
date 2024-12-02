@@ -1,4 +1,14 @@
 import { Follow, UserDto } from "tweeter-shared";
+import { DataPage } from "./DataPage";
+
+export interface Follows {
+    readonly follower_handle: string,
+    readonly follower_name: string,
+    readonly followee_handle: string,
+    readonly followee_name: string,
+    readonly followerUrl: string,
+    readonly followeeUrl: string
+}
 
 
 export interface FollowDAO {
@@ -6,7 +16,7 @@ export interface FollowDAO {
     getFollow(follower_alias: string, followee_alias: string): Promise<Follow>;
     updateFollow(follower_alias: string, followee_alias: string, followeeName: string): void;
     deleteFollow(follower_alias: string, followee_alias: string): void;
-    getPageOfFollowees(follower_alias: string, pageSize: number, lastFollowee_alias: string | undefined): Promise<{ items: UserDto[]; hasNextPage: boolean }>;
-    getPageOfFollowers(followee_alias: string, pageSize: number, lastFollower_alias: string | undefined): Promise<{ items: UserDto[]; hasNextPage: boolean }>;
+    getPageOfFollowees(follower_alias: string, pageSize: number, lastFollowee_alias: string | undefined): Promise<DataPage<Follows>>;
+    getPageOfFollowers(followee_alias: string, pageSize: number, lastFollower_alias: string | undefined): Promise<DataPage<Follows>>;
 
 }

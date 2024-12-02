@@ -1,6 +1,7 @@
-import { AuthTokenDAOImpl } from "./AuthTokenDAOImpl";
-import { FollowDAOImpl } from "./FollowDAOImpl";
-import { UserDAOImpl } from "./UserDAOImpl";
+import { AuthTokenDAOImpl } from "../AuthTokenDAOImpl";
+import { FollowDAOImpl } from "../FollowDAOImpl";
+import { S3DAOImpl } from "../S3DAOImpl";
+import { UserDAOImpl } from "../UserDAOImpl";
 
 export class DAOsFactoryImpl{
     createAuthTokenDAO(): AuthTokenDAOImpl{
@@ -13,5 +14,9 @@ export class DAOsFactoryImpl{
     
     createFollowDAO(): FollowDAOImpl {
         return new FollowDAOImpl();
+    }
+    
+    createS3DAO(): S3DAOImpl {
+        return new S3DAOImpl();
     }
 }

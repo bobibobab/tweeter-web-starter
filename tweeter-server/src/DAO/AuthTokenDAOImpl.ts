@@ -12,9 +12,8 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 
 export class AuthTokenDAOImpl implements AuthTokenDAO{
 
-    readonly tableName = "auth_tokens";
-    readonly indexName = "tokens_index";
-    readonly token_attr = "token";
+    readonly tableName = "sessions";
+    readonly token_attr = "authtoken";
     readonly userAlias_attr = "userAlias";
     readonly timeStamp_attr = "timeStamp";
 
@@ -48,6 +47,9 @@ export class AuthTokenDAOImpl implements AuthTokenDAO{
         return auth_token;
 
     }
+
+    //delete가 안돼요, but I got no error. why?
+    
     async deleteToken(token: string) {
         const params = {
             TableName: this.tableName,
@@ -56,7 +58,14 @@ export class AuthTokenDAOImpl implements AuthTokenDAO{
             },
         };
 
-        await this.client.send(new DeleteCommand(params));
+        try {
+            console.log("Deleting token with params:", params); // Debug log
+            await this.client.send(new DeleteCommand(params));
+            console.log("Token deleted successfully.");
+        } catch (error) {
+            console.error("Failed to delete token:", error);
+            throw new Error("Token deletion failed.");
+        }
     }
     
 }

@@ -1,14 +1,39 @@
 import { AuthToken, AuthTokenDto, FakeData, User, UserDto } from "tweeter-shared";
+import { DAOsFactoryImpl } from "../../DAO/factory/DAOsFactoryImpl";
 
 export class FollowService {
+
+  private factory = new DAOsFactoryImpl();
+  private followDAO = this.factory.createFollowDAO();
+  private tokenDAO = this.factory.createAuthTokenDAO();
+
   public async loadMoreFollowers (
     token: string,
     userAlias: string,
     pageSize: number,
     lastItem: UserDto | null
   ): Promise<[UserDto[], boolean]>{
+    const auth = this.tokenDAO.getToken(token);
+    if (auth === null) {
+      throw Error("unauthorized to load followees");
+    }
+
     // TODO: Replace with the result of calling server
-    return this.getFakeData(lastItem, pageSize, userAlias);
+    const res =  await this.followDAO.getPageOfFollowers(userAlias, pageSize, lastItem?.alias);
+    const users: UserDto[] = res.items.map((item: any) => {
+      const name = item.follower_name.split(" ");
+      const firstName = name[0] || "";
+      const lastName = name.slice(1).join(" ") || "";
+      return {
+        alias: item.follower_handle,
+        firstName,
+        lastName,
+        imageUrl: item.followerUrl,
+      }
+    });
+
+    return [users, res.hasNextPage]
+
   };
 
   public async loadMoreFollowees (
@@ -17,21 +42,40 @@ export class FollowService {
     pageSize: number,
     lastItem: UserDto | null
   ): Promise<[UserDto[], boolean]> {
+    const auth = this.tokenDAO.getToken(token);
+    if(auth === null){
+      throw Error("unauthorized to load followees");
+    }
+
     // TODO: Replace with the result of calling server
-    return this.getFakeData(lastItem, pageSize, userAlias);
+    const res = await this.followDAO.getPageOfFollowees(userAlias, pageSize, lastItem?.alias);
+    const users: UserDto[] = res.items.map((item: any) => {
+      const name = item.followee_name.split(" ");
+      const firstName = name[0] || "";
+      const lastName = name.slice(1).join(" ") || "";
+      return {
+        alias: item.followee_handle,
+        firstName,
+        lastName,
+        imageUrl: item.followeeUrl,
+      }
+    });
+
+    return [users, res.hasNextPage]
   };
 
-  private async getFakeData(lastItem: UserDto | null, pageSize: number, userAlias: string): Promise<[UserDto[], boolean]> {
-    const [items, hasMore] = FakeData.instance.getPageOfUsers(User.fromDto(lastItem), pageSize, userAlias);
-    const dtos = items.map((user) => user.dto);
-    return [dtos, hasMore];
-  }
 
 
   public async getFolloweeCount (
     authToken: AuthTokenDto,
     user: UserDto
   ): Promise<number> {
+    const auth = this.tokenDAO.getToken(authToken.token);
+    if (auth === null) {
+      throw Error("unauthorized to load followees");
+    }
+    
+
     // TODO: Replace with the result of calling server
     return FakeData.instance.getFolloweeCount(user.alias);
   };

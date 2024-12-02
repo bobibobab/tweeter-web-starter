@@ -1,14 +1,14 @@
-import { AuthToken, AuthTokenDto, FakeData, User, UserDto } from "tweeter-shared";
+import { AuthToken, AuthTokenDto, User, UserDto } from "tweeter-shared";
 import { Buffer } from "buffer";
-import { DAOsFactoryImpl } from "../../DAO/DAOsFactoryImpl";
-import bcrypt from "bcrypt";
-import { S3Client, PutObjectCommand, ObjectCannedACL } from "@aws-sdk/client-s3";
+import { DAOsFactoryImpl } from "../../DAO/factory/DAOsFactoryImpl";
+import bcrypt from "bcryptjs";
 
 export class UserService {
 
   private factory = new DAOsFactoryImpl();
   private userDAO = this.factory.createUserDAO();
   private tokenDAO = this.factory.createAuthTokenDAO();
+  private s3DAO = this.factory.createS3DAO();
 
   public async login (
     alias: string,
@@ -46,13 +46,12 @@ export class UserService {
   ): Promise<[UserDto, AuthTokenDto]> {
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Not neded now, but will be needed when you make the request to the server in milestone 3
+    // 이미지가 저장은 되지만, I think the image file is broken. 
     const imageBase64 = Buffer.from(userImageBytes, "base64").toString();
-    const iamgeUrl = await this.putImage(alias, imageBase64, imageFileExtension);
+    const iamgeUrl = await this.s3DAO.putImage(alias, imageBase64, imageFileExtension);
     // TODO: Replace with the result of calling the server
     const user = new User(firstName, lastName, alias, iamgeUrl);
     this.userDAO.addUser(user, hashedPassword);
-    //
 
     if (user === null) {
       throw new Error("Invalid registration");
@@ -93,35 +92,4 @@ export class UserService {
     
   };
 
-  private async putImage(
-    alias: string,
-    imageStringBase64Encoded: string,
-    iamgeFileExtention: string
-  ): Promise<string> {
-    let decodedImageBuffer: Buffer = Buffer.from(
-      imageStringBase64Encoded,
-      "base64"
-    );
-
-    const BUCKET = "bukect-name";
-    const REGION = "region server";
-
-    const s3Params = {
-      Bucket: BUCKET,
-      Key: "image/" + alias,
-      Body: decodedImageBuffer,
-      ContentType: `image/${iamgeFileExtention}`,
-      ACL: ObjectCannedACL.public_read,
-    };
-    const c = new PutObjectCommand(s3Params);
-    const client = new S3Client({ region: REGION });
-    try {
-      await client.send(c);
-      return (
-        `https://${BUCKET}.s3.${REGION}.amazonaws.com/image/${alias}`
-      );
-    } catch (error) {
-      throw Error("s3 put image failed with: " + error);
-    }
-  }
 }

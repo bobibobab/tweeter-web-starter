@@ -7,8 +7,9 @@ import {
     QueryCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { FollowDAO } from "./FollowDAO";
+import { FollowDAO, Follows } from "./FollowDAO";
 import { Follow, UserDto } from "tweeter-shared";
+import { DataPage } from "./DataPage";
 
 export class FollowDAOImpl implements FollowDAO{
     
@@ -76,7 +77,7 @@ export class FollowDAOImpl implements FollowDAO{
         follower_alias: string,
         pageSize: number,
         lastFollowee_alias: string | undefined
-    ): Promise<{ items: UserDto[]; hasNextPage: boolean }> {
+    ): Promise<DataPage<Follows>> {
         // Define the query input
         const input = {
             TableName: this.tableName,
@@ -97,7 +98,7 @@ export class FollowDAOImpl implements FollowDAO{
         const result = await this.client.send(new QueryCommand(input));
 
         // Cast the result items to Follow type
-        const items = result.Items as UserDto[];
+        const items = result.Items as Follows[];
 
         // Return the paginated results
         return {
@@ -105,7 +106,7 @@ export class FollowDAOImpl implements FollowDAO{
             hasNextPage: !!result.LastEvaluatedKey, // True if there are more results to fetch
         };
     }
-    async getPageOfFollowers(followee_alias: string, pageSize: number, lastFollower_alias: string | undefined): Promise<{ items: UserDto[]; hasNextPage: boolean }>  {
+    async getPageOfFollowers(followee_alias: string, pageSize: number, lastFollower_alias: string | undefined): Promise<DataPage<Follows>>  {
         const input = {
             TableName: this.tableName,
             KeyConditionExpression: `${this.follower_handle_attr} = :followeeHandle`,
@@ -125,7 +126,7 @@ export class FollowDAOImpl implements FollowDAO{
         const result = await this.client.send(new QueryCommand(input));
 
         // Cast the result items to Follow type
-        const items = result.Items as UserDto[];
+        const items = result.Items as Follows[];
 
         // Return the paginated results
         return {
