@@ -6,12 +6,12 @@ import {
     GetCommand,
     PutCommand,
 } from "@aws-sdk/lib-dynamodb";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { AttributeValue, DynamoDBClient } from "@aws-sdk/client-dynamodb";
 
 export class AuthTokenDAOImpl implements AuthTokenDAO{
 
     readonly tableName = "sessions";
-    readonly token_attr = "authtoken";
+    readonly token_attr = "authToken";
     readonly userAlias_attr = "userAlias";
     readonly timeStamp_attr = "timeStamp";
 
@@ -22,7 +22,7 @@ export class AuthTokenDAOImpl implements AuthTokenDAO{
             TableName: this.tableName,
             Item: {
                 [this.token_attr]: token,
-                [this.userAlias_attr]: `@${userAlias}`,
+                [this.userAlias_attr]: userAlias,
             },
         };
         await this.client.send(new PutCommand(params));
@@ -36,9 +36,12 @@ export class AuthTokenDAOImpl implements AuthTokenDAO{
             },
         };
 
+        console.log(`token: ${token}`);
+
         const result = await this.client.send(new GetCommand(params));
 
         if (!result.Item) {
+            console.log("result is undefined.");
             return null; // Return null if the user is not found
         }
 
@@ -48,7 +51,7 @@ export class AuthTokenDAOImpl implements AuthTokenDAO{
 
     //delete가 안돼요, but I got no error. why?
 
-    async deleteToken(token: string) {
+    async deleteToken(token: string): Promise<void> {
         const params = {
             TableName: this.tableName,
             Key: {

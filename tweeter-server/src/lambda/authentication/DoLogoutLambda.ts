@@ -4,7 +4,7 @@ import { TweeterResponse } from "tweeter-shared/dist/model/net/response/TweeterR
 
 export const handler = async (request: LogoutRequest): Promise<TweeterResponse> => {
     const userService = new UserService();
-    userService.logout(request.authToken);
+    await userService.logout(request.authToken);
 
     return{
         success: true,

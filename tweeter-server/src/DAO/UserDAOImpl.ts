@@ -8,7 +8,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { UserDAO } from "./UserDAO";
-import { User, UserDto } from "tweeter-shared";
+import { User } from "tweeter-shared";
 import { UserItem } from "./UserItem";
 
 export class UserDAOImpl implements UserDAO{
@@ -44,7 +44,7 @@ export class UserDAOImpl implements UserDAO{
         const params = {
             TableName: this.tableName,
             Key: {
-                [this.user_alias_attr]: user_alias,
+                [this.user_alias_attr]: user_alias[0] != '@' ? `@${user_alias}` : user_alias
             },
         };
 
@@ -58,7 +58,7 @@ export class UserDAOImpl implements UserDAO{
 
     async updateCount(user_alias: string, attributeName: string ,increaingNum: number): Promise<UserItem> {
         try {
-            const params = {
+            const params: any = {
                 TableName: this.tableName,
                 Key: {
                     [this.user_alias_attr]: user_alias,
@@ -68,7 +68,7 @@ export class UserDAOImpl implements UserDAO{
                     ":start": 0,
                     ":change": increaingNum,
                 },
-                ReturnValue: "ALL_NEW",
+                ReturnValues: "ALL_NEW",
             }
 
             const result = await this.client.send(new UpdateCommand(params));

@@ -14,7 +14,7 @@ import { DataPage } from "./DataPage";
 export class FollowDAOImpl implements FollowDAO{
     
     readonly tableName = "follows";
-    readonly indexName = "follows_index";
+    readonly indexName = "follow_index";
     readonly follower_handle_attr = "follower_handle";
     readonly follower_name_attr = "follower_name";
     readonly followee_handle_attr = "followee_handle";
@@ -75,6 +75,7 @@ export class FollowDAOImpl implements FollowDAO{
         };
         await this.client.send(new DeleteCommand(params));
     }
+    
     async getPageOfFollowees(
         follower_alias: string,
         pageSize: number,
@@ -111,15 +112,16 @@ export class FollowDAOImpl implements FollowDAO{
     async getPageOfFollowers(followee_alias: string, pageSize: number, lastFollower_alias: string | undefined): Promise<DataPage<Follows>>  {
         const input = {
             TableName: this.tableName,
-            KeyConditionExpression: `${this.follower_handle_attr} = :followeeHandle`,
+            IndexName: this.indexName,
+            KeyConditionExpression: `${this.followee_handle_attr} = :followeeHandle`,
             ExpressionAttributeValues: {
                 ":followeeHandle": followee_alias,
             },
             Limit: pageSize,
             ExclusiveStartKey: lastFollower_alias
                 ? {
-                    [this.follower_handle_attr]: followee_alias,
-                    [this.followee_handle_attr]: lastFollower_alias,
+                    [this.followee_handle_attr]: followee_alias,
+                    [this.follower_handle_attr]: lastFollower_alias,
                 }
                 : undefined,
         };

@@ -12,7 +12,7 @@ export class FollowService {
     lastItem: User | null
   ): Promise<[User[], boolean]>{
     // TODO: Replace with the result of calling server
-    
+    console.log(`checking last item: ${lastItem}`);
     const request: PagedUserItemRequest = {
       token: authToken.token,
       userAlias: userAlias,
@@ -124,9 +124,9 @@ export class FollowService {
   ): Promise<boolean> {
     // TODO: Replace with the result of calling server
     const request: GetIsFollowerStatusRequest = {
-      authToken: authToken,
-      user: user,
-      selectedUser: selectedUser
+      authToken: authToken.dto,
+      user: user.dto,
+      selectedUser: selectedUser.dto
     }
 
     const isFollower = await this.serverFacade.getIsFollowerStatus(request);

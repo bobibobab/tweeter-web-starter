@@ -44,31 +44,48 @@ export class UserService {
     userImageBytes: string,
     imageFileExtension: string
   ): Promise<[UserDto, AuthTokenDto]> {
+    const existingUser = await this.userDAO.getUser(alias);
+
+    if (existingUser && existingUser.user_alias) {
+      throw new Error("Existing alias");
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 이미지가 저장은 되지만, I think the image file is broken. 
-    const imageBase64 = Buffer.from(userImageBytes, "base64").toString();
-    const iamgeUrl = await this.s3DAO.putImage(alias, imageBase64, imageFileExtension);
+    const iamgeUrl = await this.s3DAO.putImage(alias, userImageBytes, imageFileExtension);
     // TODO: Replace with the result of calling the server
     const user = new User(firstName, lastName, alias, iamgeUrl);
     this.userDAO.addUser(user, hashedPassword);
+    user.alias = `@${alias}`;
 
     if (user === null) {
       throw new Error("Invalid registration");
     }
 
     const auth_token = AuthToken.Generate();
-    await this.tokenDAO.addToken(auth_token.token, alias);
+    await this.tokenDAO.addToken(auth_token.token, `@${alias}`);
 
     return [user.dto, auth_token.dto];
   };
 
   public async logout (authToken: string): Promise<void> {
     // Pause so we can see the logging out message. Delete when the call to the server is implemented.
-    await this.tokenDAO.deleteToken(authToken);
-    await new Promise((res) => setTimeout(res, 1000));
+    try{
+      const token = this.tokenDAO.getToken(authToken);
 
-  };
+      if (!token) {
+        throw new Error("Invalid Token");
+      }
+      await this.tokenDAO.deleteToken(authToken);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Logout failed: " + error.message);
+      } else {
+        console.error("An unexpected error occurred during logout");
+      }
+  
+    };
+  } 
 
   public async getUser (
     token: string,

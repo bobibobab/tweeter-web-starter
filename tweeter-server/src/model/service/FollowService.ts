@@ -104,14 +104,15 @@ export class FollowService {
     userToFollow: UserDto
   ): Promise<[followerCount: number, followeeCount: number]>{
     // Pause so we can see the follow message. Remove when connected to the server
-    await new Promise((f) => setTimeout(f, 2000));
 
     const auth = await this.tokenValidation(authToken.token);
+
+    console.log(`alias: ${auth.userAlias}`);
     
     try{
-      const fromUser = await this.userDAO.updateCount(auth.user_alias, "follower_number", 1);
-      await this.userDAO.updateCount(userToFollow.alias, "followee_number", 1);
-      await this.followDAO.putFollow(auth.user_alias, `${fromUser.firstName} ${fromUser.lastName}`, fromUser.imageUrl!, userToFollow.alias, `${userToFollow.firstName} ${userToFollow.lastName}`, userToFollow.imageUrl);
+      const fromUser = await this.userDAO.updateCount(auth.userAlias, "followee_number", 1);
+      await this.userDAO.updateCount(userToFollow.alias, "follower_number", 1);
+      await this.followDAO.putFollow(auth.userAlias, `${fromUser.firstName} ${fromUser.lastName}`, fromUser.imageUrl!, userToFollow.alias, `${userToFollow.firstName} ${userToFollow.lastName}`, userToFollow.imageUrl);
 
       return [fromUser.follower_number, fromUser.followee_number];
     } catch (error) {
@@ -129,21 +130,20 @@ export class FollowService {
     userToUnfollow: UserDto
   ): Promise<[followerCount: number, followeeCount: number]> {
     // Pause so we can see the unfollow message. Remove when connected to the server
-    await new Promise((f) => setTimeout(f, 2000));
 
     const auth = await this.tokenValidation(authToken.token);
 
     try {
-      const fromUser = await this.userDAO.updateCount(auth.user_alias, "follower_number", -1);
-      await this.userDAO.updateCount(userToUnfollow.alias, "followee_number", -1);
-      await this.followDAO.deleteFollow(fromUser.user_alias, userToUnfollow.alias);
+      const fromUser = await this.userDAO.updateCount(auth.userAlias, "followee_number", -1);
+      await this.userDAO.updateCount(userToUnfollow.alias, "follower_number", -1);
+      await this.followDAO.deleteFollow(auth.userAlias, userToUnfollow.alias);
 
       return [fromUser.follower_number, fromUser.followee_number];
     } catch (error) {
       if (error instanceof Error) {
-        throw new Error(`Error in following: ${error.message}`);
+        throw new Error(`Error in unfollowing: ${error.message}`);
       } else {
-        throw new Error(`Error in following: ${String(error)}`);
+        throw new Error(`Error in unfollowing: ${String(error)}`);
       }
     }
   };
@@ -153,7 +153,7 @@ export class FollowService {
     user: UserDto,
     selectedUser: UserDto
   ): Promise<boolean> {
-    const auth = await this.tokenValidation(authToken.token);
+    await this.tokenValidation(authToken.token);
 
     const res = await this.followDAO.getFollow(user.alias, selectedUser.alias);
 
