@@ -40,6 +40,7 @@ export class AuthTokenDAOImpl implements AuthTokenDAO{
 
         const result = await this.client.send(new GetCommand(params));
 
+        console.log(`result in auth: ${result.Item}`);
         if (!result.Item) {
             console.log("result is undefined.");
             return null; // Return null if the user is not found

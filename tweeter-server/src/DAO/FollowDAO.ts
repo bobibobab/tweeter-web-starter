@@ -18,5 +18,5 @@ export interface FollowDAO {
     deleteFollow(follower_alias: string, followee_alias: string): void;
     getPageOfFollowees(follower_alias: string, pageSize: number, lastFollowee_alias: string | undefined): Promise<DataPage<Follows>>;
     getPageOfFollowers(followee_alias: string, pageSize: number, lastFollower_alias: string | undefined): Promise<DataPage<Follows>>;
-
+    getReceiversForFollower(follower_alias: string): Promise<string[]>;
 }

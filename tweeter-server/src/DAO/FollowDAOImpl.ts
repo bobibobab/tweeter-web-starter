@@ -138,5 +138,34 @@ export class FollowDAOImpl implements FollowDAO{
             hasNextPage: !!result.LastEvaluatedKey, // True if there are more results to fetch
         };
     }
+
+    async getReceiversForFollower(follower_alias: string): Promise<string[]> {
+        const params = {
+            TableName: this.tableName,
+            KeyConditionExpression: `${this.follower_handle_attr} = :follower_alias`,
+            ExpressionAttributeValues: {
+                ":follower_alias": follower_alias,
+            },
+            ProjectionExpression: this.followee_handle_attr, // followee_handle만 반환
+        };
+
+        try {
+            const result = await this.client.send(new QueryCommand(params));
+            if (!result.Items || result.Items.length === 0) {
+                console.log(`No followees found for follower: ${follower_alias}`);
+                return [];
+            }
+
+            if (!result.Items) {
+                return [];
+            }
+            const followees = result.Items.map((item: Record<string, any>) => item[this.followee_handle_attr]);
+            
+            return followees;
+        } catch (error) {
+            console.error("Error fetching receivers for follower:", error);
+            throw error;
+        }
+    }
     
 }

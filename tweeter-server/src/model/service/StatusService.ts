@@ -1,6 +1,26 @@
-import { AuthToken, FakeData, Status, StatusDto } from "tweeter-shared";
+import { AuthToken, FakeData, Status, StatusDto, UserDto } from "tweeter-shared";
+import { DAOsFactoryImpl } from "../../DAO/factory/DAOsFactoryImpl";
 
 export class StatusService {
+  
+  private factory = new DAOsFactoryImpl();
+  private followDAO = this.factory.createFollowDAO();
+  private tokenDAO = this.factory.createAuthTokenDAO();
+  private userDAO = this.factory.createUserDAO();
+  private storyDAO = this.factory.createStoryDAO();
+  private feedDAO = this.factory.createFeedDAO();
+
+  private async tokenValidation(token: string) {
+    const auth = await this.tokenDAO.getToken(token);
+    console.log("working tokenDAO");
+    console.log(`auth: ${auth.userAlias}`);
+    if (auth === null) {
+      throw Error("unauthorized to load followees");
+    }
+    return auth;
+
+  }
+
   public async loadMoreFeedItems(
     token: string,
     userAlias: string,
@@ -8,7 +28,32 @@ export class StatusService {
     lastItem: StatusDto | null
   ): Promise<[StatusDto[], boolean]> {
     // TODO: Replace with the result of calling server
-    return this.getFakeData(lastItem, pageSize);
+    try{
+      await this.tokenValidation(token);
+
+      const res = await this.feedDAO.getPageOfFeeds(userAlias, pageSize, lastItem?.timestamp);
+
+      const statuses: StatusDto[] = res.items.map((item: any) => {
+        const user: UserDto = {
+          firstName: item.firstName,
+          lastName: item.lastName,
+          alias: item.author_alias,
+          imageUrl: item.imageUrl
+        }
+        return {
+          user: user,
+          post: item.post,
+          timestamp: item.timestamp
+        };
+      });
+      return [statuses, res.hasNextPage];
+    } catch (error) {
+      console.error(error);
+      throw new Error(
+        `Loading feed items failed:\n${(error as Error).message
+        }`
+      );
+    }
   };
 
   public async loadMoreStoryItems (
@@ -18,22 +63,59 @@ export class StatusService {
     lastItem: StatusDto | null
   ): Promise<[StatusDto[], boolean]> {
     // TODO: Replace with the result of calling server
-    return this.getFakeData(lastItem, pageSize);
-  };
+    try {
+      await this.tokenValidation(token);
 
-  private async getFakeData(lastItem: StatusDto | null, pageSize: number): Promise<[StatusDto[], boolean]> {
-    const [items, hasMore] = FakeData.instance.getPageOfStatuses(Status.fromDto(lastItem), pageSize);
-    const dtos = items.map((status) => status.dto);
-    return [dtos, hasMore];
-  }
+      const res = await this.storyDAO.getPageOfStories(userAlias, pageSize, lastItem?.timestamp);
+      
+      const statuses: StatusDto[] = res.items.map((item: any) => {
+        const user: UserDto = {
+          firstName: item.firstName,
+          lastName: item.lastName,
+          alias: item.author_alias,
+          imageUrl: item.imageUrl
+        }
+        return {
+          user: user,
+          post: item.post,
+          timestamp: item.timestamp
+        };
+      });
+      return [statuses, res.hasNextPage];
+    } catch (error) {
+      console.error(error);
+      throw new Error(
+        `Loading story items failed:\n${(error as Error).message
+        }`
+      );
+    }
+    
+  };
 
   public async postStatus (
     authToken: string,
-    newStatus: string
+    newStatus: StatusDto
   ): Promise<void> {
-    // Pause so we can see the logging out message. Remove when connected to the server
-    await new Promise((f) => setTimeout(f, 2000));
-
     // TODO: Call the server to post the status
+    try {
+      await this.tokenValidation(authToken);
+
+      await this.storyDAO.addStory(newStatus);
+      
+      const followers = await this.followDAO.getReceiversForFollower(newStatus.user.alias);
+      console.log(`followers ${followers[0]} and length ${followers.length}`);
+
+      if (followers && followers.length > 0) {
+        await this.feedDAO.addFeed(newStatus.user, newStatus.timestamp, newStatus.post, followers);
+      }
+
+    } catch (error) {
+      console.error(error);
+      throw new Error(
+        `posting items failed:\n${(error as Error).message
+        }`
+      );
+    }
+
   };
 }

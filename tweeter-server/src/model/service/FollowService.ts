@@ -10,7 +10,7 @@ export class FollowService {
   private userDAO = this.factory.createUserDAO();
 
   private async tokenValidation(token: string){
-    const auth = this.tokenDAO.getToken(token);
+    const auth = await this.tokenDAO.getToken(token);
     if (auth === null) {
       throw Error("unauthorized to load followees");
     }
@@ -18,6 +18,7 @@ export class FollowService {
     return auth;
 
   }
+  
   public async loadMoreFollowers (
     token: string,
     userAlias: string,

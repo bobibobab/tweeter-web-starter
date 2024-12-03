@@ -1,6 +1,7 @@
+import { StatusDto } from "../../dto/StatusDto"
 import { TweeterRequest } from "./TweeterRequest"
 
 export interface PostStatusRequest extends TweeterRequest {
     readonly authToken: string
-    readonly newStatus: string
+    readonly newStatus: StatusDto
 }

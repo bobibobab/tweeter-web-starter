@@ -50,7 +50,7 @@ export class StatusService {
     await new Promise((f) => setTimeout(f, 2000));
     const request: PostStatusRequest = {
       authToken: authToken.token,
-      newStatus: "newStatus.dto"
+      newStatus: newStatus.dto
     }
 
     const posting = await this.serverFacade.postStatus(request);
