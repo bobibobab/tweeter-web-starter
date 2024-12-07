@@ -15,6 +15,14 @@ export class FollowService {
       throw Error("unauthorized to load followees");
     }
 
+    const currentTime = Date.now();
+
+    if (currentTime > auth.expiration_time){
+      throw new Error("The token is expired");
+    }
+
+    await this.tokenDAO.updateToken(token, currentTime + 3600 * 1000);
+
     return auth;
 
   }
@@ -111,9 +119,9 @@ export class FollowService {
     console.log(`alias: ${auth.userAlias}`);
     
     try{
-      const fromUser = await this.userDAO.updateCount(auth.userAlias, "followee_number", 1);
-      await this.userDAO.updateCount(userToFollow.alias, "follower_number", 1);
-      await this.followDAO.putFollow(auth.userAlias, `${fromUser.firstName} ${fromUser.lastName}`, fromUser.imageUrl!, userToFollow.alias, `${userToFollow.firstName} ${userToFollow.lastName}`, userToFollow.imageUrl);
+      const toUser = await this.userDAO.updateCount(auth.userAlias, "followee_number", 1);
+      const fromUser = await this.userDAO.updateCount(userToFollow.alias, "follower_number", 1);
+      await this.followDAO.putFollow(auth.userAlias, `${toUser.firstName} ${toUser.lastName}`, toUser.imageUrl!, userToFollow.alias, `${userToFollow.firstName} ${userToFollow.lastName}`, userToFollow.imageUrl);
 
       return [fromUser.follower_number, fromUser.followee_number];
     } catch (error) {
@@ -135,8 +143,8 @@ export class FollowService {
     const auth = await this.tokenValidation(authToken.token);
 
     try {
-      const fromUser = await this.userDAO.updateCount(auth.userAlias, "followee_number", -1);
-      await this.userDAO.updateCount(userToUnfollow.alias, "follower_number", -1);
+      await this.userDAO.updateCount(auth.userAlias, "followee_number", -1);
+      const fromUser = await this.userDAO.updateCount(userToUnfollow.alias, "follower_number", -1);
       await this.followDAO.deleteFollow(auth.userAlias, userToUnfollow.alias);
 
       return [fromUser.follower_number, fromUser.followee_number];

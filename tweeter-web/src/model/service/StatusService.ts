@@ -37,7 +37,9 @@ export class StatusService {
       lastItem: lastItem?.dto ?? null
     }
 
-    const [users, hasMore] = await this.serverFacade.getMoreFeedItems(request);
+    console.log("userName: ", request.userAlias);
+
+    const [users, hasMore] = await this.serverFacade.getMoreStoryItems(request);
 
     return [users, hasMore];
   };

@@ -17,7 +17,6 @@ export class UserService {
     // TODO: Replace with the result of calling the server
     const user = await this.userDAO.getUser(alias);
     
-
     if (user === null) {
       throw new Error("Invalid alias");
     }
@@ -30,7 +29,8 @@ export class UserService {
     }
 
     const auth_token = AuthToken.Generate();
-    await this.tokenDAO.addToken(auth_token.token, alias);
+    const timestamp = Date.now() + 3600 * 1000;
+    await this.tokenDAO.addToken(auth_token.token, alias, timestamp);
 
     const newUser = new User(user.firstName, user.lastName, user.user_alias, user.imageUrl!);
     return [newUser.dto, auth_token.dto];
@@ -63,7 +63,8 @@ export class UserService {
     }
 
     const auth_token = AuthToken.Generate();
-    await this.tokenDAO.addToken(auth_token.token, `@${alias}`);
+    const timestamp = Date.now() + 3600 * 1000;
+    await this.tokenDAO.addToken(auth_token.token, `@${alias}`, timestamp);
 
     return [user.dto, auth_token.dto];
   };
@@ -80,8 +81,10 @@ export class UserService {
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error("Logout failed: " + error.message);
+        throw new Error("Logout failed: " + error.message);
       } else {
         console.error("An unexpected error occurred during logout");
+        throw new Error("An unexpected error occurred during logout");
       }
   
     };

@@ -8,6 +8,6 @@ export const handler = async (request: PostStatusRequest ): Promise<TweeterRespo
     
     return {
         success: true,
-        message: null
+        message: "successed"
     }
 }

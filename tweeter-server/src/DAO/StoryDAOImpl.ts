@@ -53,9 +53,9 @@ export class StoryDAOImpl implements StoryDAO {
 
         const params = {
             TableName: this.tableName,
-            KeyConditionExpression: `${this.author_alias_attr} = :author_alias`,
+            KeyConditionExpression: `${this.author_alias_attr} = :userAlias`,
             ExpressionAttributeValues: {
-                ":author_alias": userAlias,
+                ":userAlias": userAlias,
             },
             Limit: pageSize,
             ExclusiveStartKey: timestamp

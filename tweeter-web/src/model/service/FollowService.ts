@@ -91,6 +91,8 @@ export class FollowService {
       userToFollow: userToFollow.dto
     }
 
+    
+
     const [followerCount, followeeCount] = await this.serverFacade.follow(request);
 
 
@@ -110,7 +112,8 @@ export class FollowService {
       authToken: authToken.dto,
       userToFollow: userToUnfollow.dto
     }
-
+    console.log("authToken",request.authToken );
+    console.log("userToFollow", request.userToFollow);
     const [followerCount, followeeCount] = await this.serverFacade.unfollow(request);
 
 

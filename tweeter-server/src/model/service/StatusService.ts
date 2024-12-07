@@ -1,5 +1,7 @@
 import { AuthToken, FakeData, Status, StatusDto, UserDto } from "tweeter-shared";
 import { DAOsFactoryImpl } from "../../DAO/factory/DAOsFactoryImpl";
+import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
+
 
 export class StatusService {
   
@@ -9,14 +11,22 @@ export class StatusService {
   private userDAO = this.factory.createUserDAO();
   private storyDAO = this.factory.createStoryDAO();
   private feedDAO = this.factory.createFeedDAO();
+  private sqsClient = new SQSClient();
 
   private async tokenValidation(token: string) {
     const auth = await this.tokenDAO.getToken(token);
-    console.log("working tokenDAO");
-    console.log(`auth: ${auth.userAlias}`);
     if (auth === null) {
       throw Error("unauthorized to load followees");
     }
+
+    const currentTime = Date.now();
+
+    if (currentTime > auth.expiration_time) {
+      throw new Error("The token is expired");
+    }
+
+    await this.tokenDAO.updateToken(token, currentTime + 3600 * 1000);
+
     return auth;
 
   }
@@ -105,8 +115,11 @@ export class StatusService {
       const followers = await this.followDAO.getReceiversForFollower(newStatus.user.alias);
       console.log(`followers ${followers[0]} and length ${followers.length}`);
 
+      
+
       if (followers && followers.length > 0) {
-        await this.feedDAO.addFeed(newStatus.user, newStatus.timestamp, newStatus.post, followers);
+        this.sendMessage(followers, newStatus);
+        //await this.feedDAO.addFeed(newStatus.user, newStatus.timestamp, newStatus.post, followers);
       }
 
     } catch (error) {
@@ -118,4 +131,35 @@ export class StatusService {
     }
 
   };
+
+  private async sendMessage(
+    followers: string[],
+    newStatus: StatusDto
+  ): Promise<void>{
+    const sqs_url = "https://sqs.us-east-2.amazonaws.com/654654369842/PostProcessQueue";
+    
+    const messageBody = JSON.stringify({
+      followers: followers,
+      status: newStatus
+    });
+
+    const params = {
+      DelaySeconds: 10,
+      MessageBody: messageBody,
+      QueueUrl: sqs_url,
+    };
+
+    try{
+      const data = await this.sqsClient.send(new SendMessageCommand(params));
+      console.log("Success, message sent.MessageID:", data.MessageId);
+    } catch (error){
+      throw new Error(
+        `sending to SQS failed: ${(error as Error).message}`
+      );
+    }
+
+    
+
+  };
+
 }

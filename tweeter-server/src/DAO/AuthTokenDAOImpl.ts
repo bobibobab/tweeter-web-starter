@@ -5,6 +5,7 @@ import {
     DynamoDBDocumentClient,
     GetCommand,
     PutCommand,
+    UpdateCommand,
 } from "@aws-sdk/lib-dynamodb";
 import { AttributeValue, DynamoDBClient } from "@aws-sdk/client-dynamodb";
 
@@ -14,15 +15,17 @@ export class AuthTokenDAOImpl implements AuthTokenDAO{
     readonly token_attr = "authToken";
     readonly userAlias_attr = "userAlias";
     readonly timeStamp_attr = "timeStamp";
+    readonly expirationTime_attr = "expiration_time";
 
     private readonly client = DynamoDBDocumentClient.from(new DynamoDBClient())
 
-    async addToken(token: string, userAlias: string) {
+    async addToken(token: string, userAlias: string, expirationTime: number) {
         const params = {
             TableName: this.tableName,
             Item: {
                 [this.token_attr]: token,
                 [this.userAlias_attr]: userAlias,
+                [this.expirationTime_attr]: expirationTime
             },
         };
         await this.client.send(new PutCommand(params));
@@ -50,7 +53,22 @@ export class AuthTokenDAOImpl implements AuthTokenDAO{
 
     }
 
-    //delete가 안돼요, but I got no error. why?
+    async updateToken(token: string, updatedTime: number): Promise<void> {
+        const params = {
+            TableName: this.tableName,
+            Key: {
+                [this.token_attr]: token,
+            },
+            UpdateExpression: "set #expirationTime = :expirationTime",
+            ExpressionAttributeNames: {
+                "#expirationTime": this.expirationTime_attr,
+            },
+            ExpressionAttributeValues: {
+                ":expirationTime": updatedTime,
+            },
+        };
+        await this.client.send(new UpdateCommand(params));
+    }
 
     async deleteToken(token: string): Promise<void> {
         const params = {

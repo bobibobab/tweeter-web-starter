@@ -62,7 +62,7 @@ const ItemScroller = <T, U>(props: Props<T, U>) => {
     presenter.loadMoreItems(authToken!, displayedUser!.alias);
     setChangedDisplayedUser(false);
   };  
-
+  
   return (
     <div className="container px-0 overflow-visible vh-100">
       <InfiniteScroll
