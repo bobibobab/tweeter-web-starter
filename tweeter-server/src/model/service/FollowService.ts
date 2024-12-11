@@ -37,17 +37,26 @@ export class FollowService {
 
     // TODO: Replace with the result of calling server
     const res =  await this.followDAO.getPageOfFollowers(userAlias, pageSize, lastItem?.alias);
-    const users: UserDto[] = res.items.map((item: any) => {
-      const name = item.follower_name.split(" ");
-      const firstName = name[0] || "";
-      const lastName = name.slice(1).join(" ") || "";
-      return {
-        alias: item.follower_handle,
-        firstName,
-        lastName,
-        imageUrl: item.followerUrl,
-      }
-    });
+    const users: UserDto[] = await Promise.all(
+      res.items.map(async (item: any) => {
+        const userItem: UserItem | null = await this.userDAO.getUser(item.follower_handle);
+
+        if (userItem === null) {
+          throw new Error("User is not found.");
+        }
+
+        const createdUser: User = new User(
+          userItem.firstName,
+          userItem.lastName,
+          userItem.user_alias,
+          userItem.imageUrl!
+        );
+        return createdUser.dto;
+      })
+    );
+      // const name = item.follower_name.split(" ");
+      // const firstName = name[0] || "";
+      // const lastName = name.slice(1).join(" ") || "";
 
     return [users, res.hasNextPage]
 

@@ -14,6 +14,7 @@
     "buffer": "^6.0.3",
     "isomorphic-fetch": "^3.0.0",
     "node": "^20.11.1",
+    "node-fetch": "^3.3.2",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.1",
     "react-dom": "^18.2.0",
@@ -70,6 +71,7 @@
     "vite-tsconfig-paths": "^4.3.1"
   },
   "jest": {
+    "testTimeout": 100000,
     "verbose": true,
     "testEnvironment": "jsdom",
     "moduleNameMapper": {

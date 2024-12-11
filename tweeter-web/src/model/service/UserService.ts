@@ -62,7 +62,6 @@ export class UserService {
     }
     const mes = await this.serverFacade.doLogout(request);
 
-    await new Promise((res) => setTimeout(res, 1000));
   };
 
   public async getUser (

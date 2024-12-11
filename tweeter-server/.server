@@ -15,5 +15,7 @@ tweeterDoLogin | lambda/authentication/DoLoginLambda.handler
 tweeterDoRegister | lambda/authentication/DoRegisterLambda.handler
 tweeterGetUser | lambda/authentication/GetUserLambda.handler
 tweeterDoLogout | lambda/authentication/DoLogoutLambda.handler
+PostProcessQueue | lambda/SQS/PostProcessQueue.handler
+FeedProcessQueue | lambda/SQS/FeedProcessQueue.handler
 '
 LAMBDALAYER_ARN='arn:aws:lambda:us-east-2:654654369842:layer:tweeter:11'

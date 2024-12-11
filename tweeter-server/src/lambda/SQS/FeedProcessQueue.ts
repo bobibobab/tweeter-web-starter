@@ -5,14 +5,12 @@ export const handler = async function (event: any) {
     const feedDAO = factory.createFeedDAO();
 
     for (const record of event.Records) {
-        const feed = JSON.parse(record.body); // check post's content if there is author name or not.
-
-        console.log("FeedProcessQueue body: ", record.body);
-        const receiver = feed.receiver;
-        const status = feed.status;
-
-        feedDAO.addFeed(status.user, status.timeStamp, status.post, receiver);
-        
+        const feeds = JSON.parse(record.body);
+        const batchSize = 25;
+        for (let i = 0; i < feeds.receiver.length; i += batchSize) {
+            const followers = feeds.receiver.slice(i, i + batchSize);
+            await feedDAO.addFeedsBatch(feeds.status.user, feeds.status.timestamp, feeds.status.post, followers);
+        }
     }
     return null;
 };

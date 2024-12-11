@@ -111,16 +111,12 @@ export class StatusService {
       await this.tokenValidation(authToken);
 
       await this.storyDAO.addStory(newStatus);
-      
-      const followers = await this.followDAO.getReceiversForFollower(newStatus.user.alias);
-      console.log(`followers ${followers[0]} and length ${followers.length}`);
 
-      
+      // const followers = await this.followDAO.getReceiversForFollower(newStatus.user.alias);
+      // console.log(`followers ${followers[0]} and length ${followers.length}`);
 
-      if (followers && followers.length > 0) {
-        this.sendMessage(followers, newStatus);
-        //await this.feedDAO.addFeed(newStatus.user, newStatus.timestamp, newStatus.post, followers);
-      }
+      console.log("sending... to SQS");
+      await this.sendMessage(newStatus.user.alias, newStatus);
 
     } catch (error) {
       console.error(error);
@@ -133,13 +129,13 @@ export class StatusService {
   };
 
   private async sendMessage(
-    followers: string[],
+    author_alias: string,
     newStatus: StatusDto
   ): Promise<void>{
     const sqs_url = "https://sqs.us-east-2.amazonaws.com/654654369842/PostProcessQueue";
     
     const messageBody = JSON.stringify({
-      followers: followers,
+      author_alias: author_alias,
       status: newStatus
     });
 

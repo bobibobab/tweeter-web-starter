@@ -142,11 +142,12 @@ export class FollowDAOImpl implements FollowDAO{
     async getReceiversForFollower(follower_alias: string): Promise<string[]> {
         const params = {
             TableName: this.tableName,
-            KeyConditionExpression: `${this.follower_handle_attr} = :follower_alias`,
+            IndexName: this.indexName,
+            KeyConditionExpression: `${this.followee_handle_attr} = :followee_alias`,
             ExpressionAttributeValues: {
-                ":follower_alias": follower_alias,
+                ":followee_alias": follower_alias,
             },
-            ProjectionExpression: this.followee_handle_attr, // followee_handle만 반환
+            ProjectionExpression: this.follower_handle_attr, // followee_handle만 반환
         };
 
         try {
@@ -159,9 +160,9 @@ export class FollowDAOImpl implements FollowDAO{
             if (!result.Items) {
                 return [];
             }
-            const followees = result.Items.map((item: Record<string, any>) => item[this.followee_handle_attr]);
+            const followers = result.Items.map((item: Record<string, any>) => item[this.follower_handle_attr]);
             
-            return followees;
+            return followers;
         } catch (error) {
             console.error("Error fetching receivers for follower:", error);
             throw error;

@@ -93,6 +93,7 @@ export class Status {
 
   private static parseUrls(post: string): string[] {
     const urls: string[] = [];
+    
 
     for (let word of post.split(/(\s+)/)) {
       if (word.startsWith("http://") || word.startsWith("https://")) {
